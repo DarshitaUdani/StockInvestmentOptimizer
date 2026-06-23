@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Stock Investment Optimizer</title>
+<style>
+  *{box-sizing:border-box;font-family:Arial, sans-serif} body{margin:0;background:#f3f4f6;min-height:100vh;padding:32px;color:#111827}.container{max-width:760px;margin:auto}.header{text-align:center;margin-bottom:30px}.header h1{color:#2563eb;margin-bottom:8px}.card{background:white;padding:24px;border-radius:12px;box-shadow:0 4px 14px rgba(0,0,0,.08)}label{display:block;font-weight:600;color:#374151;margin-bottom:8px}input{width:100%;padding:10px 12px;border:1px solid #d1d5db;border-radius:8px;font-size:15px}button{border:0;padding:10px 16px;border-radius:8px;color:white;font-weight:600;cursor:pointer;margin-top:8px}.blue{background:#3b82f6}.green{background:#22c55e}.stock{border:1px solid #e5e7eb;border-radius:10px;padding:16px;margin:14px 0}.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.hidden{display:none}.results{margin-top:20px;background:#f9fafb;border:1px solid #e5e7eb;padding:18px;border-radius:10px}.success{color:#16a34a;font-size:22px;font-weight:700}.row{display:flex;justify-content:space-between;border-top:1px solid #e5e7eb;padding:8px 0}.small{color:#6b7280;font-size:14px}@media(max-width:600px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>Stock Investment Optimizer</h1>
+    <p>Maximize your returns using the Fractional Knapsack Algorithm</p>
+  </div>
+  <div class="card">
+    <div>
+      <label for="numStocks">Number of Stocks</label>
+      <input type="number" id="numStocks" min="1" value="3" />
+      <button class="blue" id="generateFields">Generate Stock Fields</button>
+    </div>
+    <div id="stockFields" class="hidden"></div>
+    <div id="budget-form" class="hidden">
+      <label for="budget">Total Budget</label>
+      <input type="number" id="budget" min="0" step="0.01" placeholder="Example: 10000" />
+      <button class="green" id="calculateReturn">Calculate Maximum Return</button>
+    </div>
+    <div id="results" class="results hidden"><h2>Results</h2><div id="resultContent"></div></div>
+  </div>
+</div>
+<script>
+let stocks=[];
+document.getElementById('generateFields').addEventListener('click',generateStockFields);
+document.getElementById('calculateReturn').addEventListener('click',calculateMaximumReturn);
+function generateStockFields(){const n=parseInt(document.getElementById('numStocks').value);if(!n||n<1){alert('Please enter a valid number of stocks');return;}const c=document.getElementById('stockFields');c.innerHTML='';c.classList.remove('hidden');for(let i=0;i<n;i++){const d=document.createElement('div');d.className='stock';d.innerHTML=`<h3>Stock ${i+1}</h3><div class="grid"><div><label>Price</label><input type="number" id="price-${i}" min="0.01" step="0.01" placeholder="Example: 5000"></div><div><label>Expected Return</label><input type="number" id="return-${i}" min="0" step="0.01" placeholder="Example: 800"></div></div>`;c.appendChild(d);}document.getElementById('budget-form').classList.remove('hidden');}
+function fractionalKnapsack(stocks,budget){const sorted=[...stocks].sort((a,b)=>b.ratio-a.ratio);let totalReturn=0,allocations=[];for(const stock of sorted){if(budget>=stock.price){budget-=stock.price;totalReturn+=stock.expected_return;allocations.push({stockIndex:stock.originalIndex,allocation:1,returnValue:stock.expected_return});}else if(budget>0){const f=budget/stock.price;totalReturn+=stock.expected_return*f;allocations.push({stockIndex:stock.originalIndex,allocation:f,returnValue:stock.expected_return*f});break;}}return{totalReturn,allocations};}
+function calculateMaximumReturn(){const n=parseInt(document.getElementById('numStocks').value);const budget=parseFloat(document.getElementById('budget').value);if(isNaN(budget)||budget<0){alert('Please enter a valid budget');return;}stocks=[];for(let i=0;i<n;i++){const price=parseFloat(document.getElementById(`price-${i}`).value);const expectedReturn=parseFloat(document.getElementById(`return-${i}`).value);if(isNaN(price)||price<=0||isNaN(expectedReturn)||expectedReturn<0){alert(`Please enter valid values for Stock ${i+1}`);return;}stocks.push({originalIndex:i,price,expected_return:expectedReturn,ratio:expectedReturn/price});}displayResults(fractionalKnapsack(stocks,budget),budget);}
+function displayResults(result,totalBudget){const r=document.getElementById('results'),content=document.getElementById('resultContent');r.classList.remove('hidden');let spent=0;let html=`<p class="success">Maximum Expected Return: ₹${result.totalReturn.toFixed(2)}</p><h3>Allocation Details:</h3>`;result.allocations.forEach(a=>{const s=stocks[a.stockIndex];const amount=s.price*a.allocation;spent+=amount;html+=`<div class="row"><div><b>Stock ${a.stockIndex+1}</b><div class="small">Price: ₹${s.price.toFixed(2)} | Expected Return: ₹${s.expected_return.toFixed(2)}</div></div><div>${(a.allocation*100).toFixed(2)}%</div></div>`;});html+=`<hr><p><b>Total Budget:</b> ₹${totalBudget.toFixed(2)}</p><p><b>Budget Spent:</b> ₹${spent.toFixed(2)}</p><p><b>Budget Remaining:</b> ₹${(totalBudget-spent).toFixed(2)}</p>`;content.innerHTML=html;}
+</script>
+</body>
+</html>
