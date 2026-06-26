@@ -107,6 +107,3 @@ Developed as a project demonstrating the practical application of the Fractional
 
 ---
 
-## 📜 License
-
-This project is open-source and available under the MIT License.
